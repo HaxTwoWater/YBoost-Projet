@@ -20,7 +20,7 @@ FICHIERS = {
 }
 
 for annee, file_id in FICHIERS.items():
-    sortie = RAW / f"{annee}_LoL_esports_match_data.csv"
+    sortie = RAW / f"{annee}_LoL_esports_match_data_from_OraclesElixir.csv"
     if sortie.exists():
         print(f"{annee} déjà là")
         continue
