@@ -32,7 +32,13 @@ pip install -r requirements.txt
 python src/download.py
 ```
 
-Le script télécharge un fichier CSV par année (2014 à 2026) dans `data/raw/`. Les fichiers déjà présents ne sont pas retéléchargés. Pour forcer une mise à jour, supprimez le fichier concerné et relancez le script.
+Le script lit le contenu du dossier Google Drive d'Oracle's Elixir et télécharge chaque CSV (un par année, depuis 2014) dans `data/raw/`. Une nouvelle année publiée par Oracle's Elixir est donc récupérée automatiquement, sans modifier le script.
+
+- Les fichiers déjà présents ne sont pas retéléchargés.
+- Le fichier de l'année en cours est toujours retéléchargé, car il est mis à jour chaque jour.
+- Pour tout retélécharger : `python src/download.py --force`
+
+Google Drive limite parfois le nombre de téléchargements d'un fichier. Dans ce cas, le script passe au fichier suivant et affiche la liste des échecs à la fin : il suffit de le relancer plus tard.
 
 Le premier téléchargement prend quelques minutes (environ 850 Mo au total).
 

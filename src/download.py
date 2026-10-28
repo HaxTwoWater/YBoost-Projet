@@ -1,27 +1,47 @@
-import gdown
+import argparse
+from datetime import date
 from pathlib import Path
 
+import gdown
+
+# Dossier Google Drive public d'Oracle's Elixir (un CSV par année)
+DOSSIER_ID = "1gLSw0RLjBbtaNy0dgnGQDAZOHIgCe-HH"
 RAW = Path("data/raw")
-RAW.mkdir(parents=True, exist_ok=True)
 
-FICHIERS = {
-    2014: "12syQsRH2QnKrQZTQQ6G5zyVeTG2pAYvu",
-    2015: "1qyckLuw0-hJM8XqFhlV9l1xAbr3H78T_",
-    2016: "1muyfpaIqk8_0BFkgLCWXDGNgWSXoPBwG",
-    2017: "11fx3nNjSYB0X8vKxLAbYOrS2Bu6avm9A",
-    2018: "1GsNetJQOMx0QJ6_FN8M1kwGvU_GPPcPZ",
-    2019: "11eKtScnZcpfZcD3w3UrD7nnpfLHvj9_t",
-    2020: "1dlSIczXShnv1vIfGNvBjgk-thMKA5j7d",
-    2021: "1fzwTTz77hcnYjOnO9ONeoPrkWCoOSecA",
-    2022: "1EHmptHyzY8owv0BAcNKtkQpMwfkURwRy",
-    2023: "1XXk2LO0CsNADBB1LRGOV5rUpyZdEZ8s2",
-    2024: "1IjIEhLc9n8eLKeY-yh_YigKVWbhgGBsN",
-    2025: "1v6LRphp2kYciU4SXp0PCjEMuev1bDejc",
-}
 
-for annee, file_id in FICHIERS.items():
-    sortie = RAW / f"{annee}_LoL_esports_match_data_from_OraclesElixir.csv"
-    if sortie.exists():
-        print(f"{annee} déjà là")
-        continue
-    gdown.download(id=file_id, output=str(sortie), quiet=False)
+def lister_fichiers():
+    """Renvoie la liste des CSV présents dans le dossier Drive, sans rien télécharger."""
+    fichiers = gdown.download_folder(id=DOSSIER_ID, skip_download=True, quiet=True)
+    return [f for f in fichiers if f.path.endswith(".csv")]
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Télécharge les données Oracle's Elixir.")
+    parser.add_argument("--force", action="store_true", help="retélécharge tous les fichiers")
+    args = parser.parse_args()
+
+    RAW.mkdir(parents=True, exist_ok=True)
+    annee_en_cours = str(date.today().year)
+    echecs = []
+
+    for fichier in lister_fichiers():
+        sortie = RAW / fichier.path
+        # Le fichier de l'année en cours est mis à jour chaque jour : on le reprend toujours
+        a_jour = sortie.exists() and not fichier.path.startswith(annee_en_cours)
+        if a_jour and not args.force:
+            print(f"{fichier.path} déjà là")
+            continue
+        try:
+            gdown.download(id=fichier.id, output=str(sortie), quiet=False)
+        except gdown.exceptions.FileURLRetrievalError:
+            # Google Drive limite parfois les téléchargements : on passe au suivant
+            echecs.append(fichier.path)
+
+    if echecs:
+        print("\nÉchec (quota Google Drive, réessayer plus tard) :")
+        for nom in echecs:
+            print(f"  - {nom}")
+
+
+if __name__ == "__main__":
+    main()
