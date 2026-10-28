@@ -1,2 +1,2 @@
 pandas
-gdown
+gdown>=5.1
